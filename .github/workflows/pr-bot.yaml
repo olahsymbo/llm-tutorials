@@ -15,8 +15,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Ensures we can compare with the previous commit
+
+      - name: Get Changed Files
+        id: changed_files
+        run: |
+          git diff --name-only HEAD^ HEAD > changed_files.txt
+          echo "Changed files:"
+          cat changed_files.txt
+
+      - name: Read Changed Files Content
+        id: read_changed_files
+        run: |
+          echo 'CODE<<EOF' >> $GITHUB_ENV
+          while IFS= read -r file; do
+            echo "Processing: $file"
+            echo "### $file" >> $GITHUB_ENV
+            cat "$file" >> $GITHUB_ENV
+            echo "" >> $GITHUB_ENV
+          done < changed_files.txt
+          echo 'EOF' >> $GITHUB_ENV
 
       - name: Analyze Code with OpenAI
         run: |
@@ -28,7 +49,7 @@ jobs:
                   "model": "gpt-3.5-turbo",
                   "messages": [
                     {"role": "system", "content": "You are an AI code reviewer. Review the following code for quality, potential issues, and improvements."},
-                    {"role": "user", "content": "${{ steps.checkout.outputs.code }}"}
+                    {"role": "user", "content": "$CODE"}
                   ],
                   "temperature": 0.2,
                   "max_tokens": 1500
