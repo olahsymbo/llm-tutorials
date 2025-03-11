@@ -4,6 +4,12 @@ on:
   pull_request:
     types: [opened, synchronize]
 
+permissions:
+  contents: write
+  id-token: write
+  pull-requests: write
+  repository-projects: write
+
 jobs:
   ai_review:
     runs-on: ubuntu-latest
