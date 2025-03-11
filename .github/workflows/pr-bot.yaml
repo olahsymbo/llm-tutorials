@@ -29,7 +29,7 @@ jobs:
                 "temperature": 0.2,
                 "max_tokens": 1500
               }' > ai_review.json
-
+           cat ai_review.json
       - name: Post AI Review as PR Comment
         uses: actions/github-script@v6
         with:
