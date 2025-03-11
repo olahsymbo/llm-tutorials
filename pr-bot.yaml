@@ -1,0 +1,40 @@
+name: AI Code Review  
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  ai_review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Analyze Code with OpenAI
+        run: |
+          curl -X POST "https://api.openai.com/v1/completions" \
+          -H "Authorization: Bearer ${{ secrets.OPENAI_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+                "model": "code-davinci-002",
+                "prompt": "Please review the following code for quality, potential issues, and improvements:\n\n{{ steps.checkout.outputs.code }}\n\nProvide feedback on code structure, possible bugs, and optimizations.",
+                "temperature": 0.2,
+                "max_tokens": 1500
+              }' > ai_review.json
+
+      - name: Post AI Review as PR Comment
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const review = JSON.parse(fs.readFileSync('ai_review.json', 'utf8'));
+            const comment = review.choices[0].text.trim();
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "### AI Code Review Bot 🤖\n" + comment
+            });
