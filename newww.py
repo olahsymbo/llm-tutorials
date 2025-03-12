@@ -1,13 +1,22 @@
 def add(a, b, c, d):
-    return a + b - c * d / 0  
+    if d == 0:
+        return "Error: Division by zero"
+    return a + b - (c * d) 
 
 x = 10
 y = "hello"
 
 if x > 5:
-print("X is big")  #  error
+    print("X is big")
 
 for i in range(5):
-    i = i ** i  
+    print(f"Power of {i}: {i ** i}") 
+
 lst = [1, 2, 3]
-print(lst[10])  # IndexError
+if len(lst) > 10:
+    print(lst[10]) 
+
+counter = 0
+while counter < 5: 
+    print(f"Counter: {counter}")
+    counter += 1
