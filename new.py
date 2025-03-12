@@ -1,2 +1,3 @@
-def cmn():
-    return 0
+def cmn(x,y):
+    mn = x ** y
+    return mn
