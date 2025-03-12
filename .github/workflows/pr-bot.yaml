@@ -63,10 +63,11 @@ jobs:
           script: |
             const fs = require('fs');
             const review = JSON.parse(fs.readFileSync('ai_review.json', 'utf8'));
-            const comment = review.choices[0].text.trim();
+            const comment = review.choices[0].message.content.trim();
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: "### AI Code Review Bot 🤖\n" + comment
             });
+
