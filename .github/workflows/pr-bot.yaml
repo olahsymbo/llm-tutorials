@@ -30,31 +30,32 @@ jobs:
       - name: Read Changed Files Content
         id: read_changed_files
         run: |
-          echo 'CODE<<EOF' >> $GITHUB_ENV
+          content=""
           while IFS= read -r file; do
             echo "Processing: $file"
-            echo "### $file" >> $GITHUB_ENV
-            cat "$file" >> $GITHUB_ENV
-            echo "" >> $GITHUB_ENV
+            content+="### $file\n$(cat "$file")\n\n"
           done < changed_files.txt
-          echo 'EOF' >> $GITHUB_ENV
+          echo "code_content<<EOF" >> $GITHUB_ENV
+          echo "$content" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Analyze Code with OpenAI
         run: |
-          echo $GITHUB_ENV
+          CODE_CONTENT=$(printf '%s' "$code_content" | jq -Rs .)
           curl -X POST "https://api.openai.com/v1/chat/completions" \
             -H "Authorization: Bearer ${{ secrets.OPENAI_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{
-                  "model": "gpt-3.5-turbo",
-                  "messages": [
-                    {"role": "system", "content": "You are an AI code reviewer. Review the following code for quality, potential issues, and improvements."},
-                    {"role": "user", "content": "$GITHUB_ENV"}
+            -d "{
+                  \"model\": \"gpt-3.5-turbo\",
+                  \"messages\": [
+                    {\"role\": \"system\", \"content\": \"You are an AI code reviewer. Review the following code for quality, potential issues, and improvements.\"},
+                    {\"role\": \"user\", \"content\": $CODE_CONTENT}
                   ],
-                  "temperature": 0.2,
-                  "max_tokens": 1500
-                }' > ai_review.json
+                  \"temperature\": 0.2,
+                  \"max_tokens\": 1500
+                }" > ai_review.json
           cat ai_review.json
+
       - name: Post AI Review as PR Comment
         uses: actions/github-script@v6
         with:
